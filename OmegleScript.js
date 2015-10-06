@@ -12,7 +12,7 @@
 //logbox
 //chatmsg
 //sendbtn
-
+var shit = "Omegle couldn't find anyone who shares interests with you, so this stranger is completely random. Try adding more interests!"
 var logBox;
 //placeholder
 function logEvent(e){
@@ -21,16 +21,17 @@ function logEvent(e){
 //used to find HTML element where the chat log is held
 function searchBox(){
     console.log("searching");
+    logBox = document.getElementsByClassName("logbox")[0];
     if(logBox==undefined){
-        logBox = document.getElementsByClassName("logbox")[0];
-        //logBox.addEventListener("change", logEvent,false); //need to find actual event that triggers when a HTML element changes
+        return;
+    }else{
         console.log("found it");
         colourMeBlack();
         document.removeEventListener("click", searchBox);
     } 
 }
 var backColor="#111111";
-var frontColor="#999999";
+var frontColor="#AAAAAA";
 var strongColor="#116633";
 var strangerColor="#880909";
 function colourMeBlack(){
@@ -65,24 +66,27 @@ var periodicTime=300;
 function periodicCheck(){
     colorChat();
     var current=document.getElementsByClassName("msgsource");
+    var stat = document.getElementsByClassName("statuslog");
+    for(var i=0;i<stat.length;++i){
+        if(stat[i]!=undefined && stat[i].innerHTML==shit)
+            myDisconnect();
+    }
     if(lastcheck!=current.length){
         var diff=current.length-lastcheck;
-        console.log("found change "+lastcheck);
         for(var i=lastcheck;i<current.length;i++){
             current[i].color=strongColor;
             var curr=current[i].parentNode.parentNode;
             curr.style.color=frontColor;
+           // console.log("Current inner:"+curr.innerHTML);
             var bold=curr.getElementsByClassName("strangermsg")[0];
             if(bold!=undefined){
+                //console.log("bold inner for stranger= "+bold.innerHTML);
                 bold.getElementsByClassName("msgsource")[0].style.color=strangerColor;
             }
             bold=curr.getElementsByClassName("youmsg")[0];
             if(bold!=undefined){
+                // console.log("bold inner for youmsg= "+bold.innerHTML);
                 bold.getElementsByClassName("msgsource")[0].style.color=strongColor;
-            }
-            var newChat=curr.getElementsByClassName("newchatbtnwrapper")[0];
-            if(newChat!=undefined){
-                newChat.parentNode.removeChild(newChat);
             }
             //"msgsource"
             //"strangermsg"
@@ -92,7 +96,7 @@ function periodicCheck(){
     }
     window.setTimeout(function(){periodicCheck()}, periodicTime);
 }
-var dissText="Goodbye.";
+var dissText="";
 //triggers when a key is pressed anywhere in the window
 var waiting=true;
 function keyDownTextField(e) {
@@ -102,12 +106,20 @@ function keyDownTextField(e) {
     if (evtobj.keyCode == 81 && evtobj.ctrlKey&&waiting){
         waiting=false; 
         console.log("made it false "+waiting);
-        var t= document.getElementsByClassName("chatmsg")[0].value=dissText;
-        var z = document.getElementsByClassName("sendbtn")[0];
-        z.click();
+        sendMessage(dissText);
         window.setTimeout(function(){myDisconnect()}, 500);
         console.log("started waiting");
     }
+    if (evtobj.keyCode == 81 && evtobj.altKey&&waiting){
+        waiting=false; 
+        console.log("made it false "+waiting);
+        sendMessage(greetText);
+        window.setTimeout(function(){resetWait()}, 500);
+        console.log("started waiting");
+    }
+}
+function resetWait(){
+    waiting=true;
 }
 function myDisconnect(){
     var disconnectButton = document.getElementsByClassName("disconnectbtn")[0];
@@ -119,4 +131,9 @@ function myDisconnect(){
 }
 document.addEventListener("keydown", keyDownTextField, false);
 document.addEventListener("click",searchBox,false);
-//console.log("poo");
+var greetText="If you're going to ask \"How are you?\", \"Where are you from\", \"What's your name?\" or \"What do you do?\" you might as well disconnect right now.";
+function sendMessage(message){
+    var t= document.getElementsByClassName("chatmsg")[0].value=message;
+    var z = document.getElementsByClassName("sendbtn")[0];
+    //z.click();
+}
