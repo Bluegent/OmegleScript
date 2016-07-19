@@ -12,20 +12,29 @@
 //logbox
 //chatmsg
 //sendbtn
+function getTimeStamp(){
+    var d = new Date();
+    var str = "";
+    if(d.getHours()<10)
+        str+="0";
+    str+=d.getHours()+":";
+    if(d.getMinutes()<10)
+        str+="0";
+    str+=d.getMinutes()+":";
+    if(d.getSeconds()<10)
+        str+="0";
+    str+=d.getSeconds();
+    return "["+str+"]";
+}
 var shit = "Omegle couldn't find anyone who shares interests with you, so this stranger is completely random. Try adding more interests!"
 var logBox;
 //placeholder
-function logEvent(e){
-    console.log("log changed!");
-}
 //used to find HTML element where the chat log is held
 function searchBox(){
-    console.log("searching");
     logBox = document.getElementsByClassName("logbox")[0];
     if(logBox==undefined){
         return;
     }else{
-        console.log("found it");
         colourMeBlack();
         document.removeEventListener("click", searchBox);
     } 
@@ -75,6 +84,9 @@ function periodicCheck(){
         var diff=current.length-lastcheck;
         for(var i=lastcheck;i<current.length;i++){
             current[i].color=strongColor;
+            //current[i].innerHTML = getTimeStamp()+" "+current[i].innerHTML;
+            var msg = current[i].parentElement;
+            msg.innerHTML ="<span>"+getTimeStamp()+" </span>"+ msg.innerHTML;
             var curr=current[i].parentNode.parentNode;
             curr.style.color=frontColor;
            // console.log("Current inner:"+curr.innerHTML);
@@ -105,17 +117,13 @@ function keyDownTextField(e) {
     //currently ctrl+q disconnects and finds new chat after leaving a message.
     if (evtobj.keyCode == 81 && evtobj.ctrlKey&&waiting){
         waiting=false; 
-        console.log("made it false "+waiting);
         sendMessage(dissText);
         window.setTimeout(function(){myDisconnect()}, 500);
-        console.log("started waiting");
     }
     if (evtobj.keyCode == 81 && evtobj.altKey&&waiting){
         waiting=false; 
-        console.log("made it false "+waiting);
         sendMessage(greetText);
         window.setTimeout(function(){resetWait()}, 500);
-        console.log("started waiting");
     }
 }
 function resetWait(){
@@ -127,7 +135,6 @@ function myDisconnect(){
     disconnectButton.click();
     disconnectButton.click();
     waiting=true;
-    console.log("made it true "+waiting);
 }
 document.addEventListener("keydown", keyDownTextField, false);
 document.addEventListener("click",searchBox,false);
