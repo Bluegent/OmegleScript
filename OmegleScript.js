@@ -150,7 +150,7 @@ function checkMsg() {
               myDisconnect();
               return;
             }
-            if(!(amsg[amsg.length-1] in ['.','!','?'])){
+            if (!['.', '!', '?',','].includes(amsg[amsg.length - 1])) {
               myDisconnect();
               return;
             }
