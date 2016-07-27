@@ -11,13 +11,7 @@
 //Instructions:
 // ctrl + q - auto disconnect and find new chat
 // alt + q - paste specific text in box 
-//script automatically disconnects on no interests and a list of phrases by default, can be set below
-
-//useful stuff
-//disconnectbtn 
-//logbox
-//chatmsg
-//sendbtn
+// script automatically disconnects on no interests and a list of phrases by default, can be set below
 
 //set to false if you don't want to auto disconnect on no interest matches
 var disconnectOnEmpty = true;
@@ -232,3 +226,8 @@ function sendMessage(message) {
   var z = document.getElementsByClassName('sendbtn') [0];
 }
 
+//useful stuff
+//disconnectbtn 
+//logbox
+//chatmsg
+//sendbtn
