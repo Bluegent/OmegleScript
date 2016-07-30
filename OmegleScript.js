@@ -18,11 +18,13 @@ var disconnectOnEmpty = true;
 //henceforth referred as 'x'
 var messagesChecked = 5;
 //set to false if you don't want to auto disconnect on lack of capitalisation and punctuation(within first x messages)
-var disconnectOnNoCaps = true;
+var disconnectOnNoCaps = false;
 //set to false if you don't want to disconnect on certain phrases(within first x messages)
 var disconnectOnMessage = true;
+//set to true if you want to search for a new conversation after a stranger disconnects within the first x lines
+var reconnectAfter = true;
 //list of phrases to auto disconnect on, feel free to add more
-var phrasesThatTriggerForth = ['asl','m','m or f',"what's your name?",'what is your name?','asl?','asl.','m?','f?','m.','f.'];
+var phrasesThatTriggerForth = ['whats your name?','whats your name','m r f?','m r f','asl','m','m or f',"what's your name?",'what is your name?','asl?','asl.','m?','f?','m.','f.'];
 //amount in ms between two checks, set to lower if you dislike timestamp popping, too low values will affect performance
 var periodicTime = 300;
 //colour for background
@@ -118,6 +120,12 @@ function checkStatusMsg() {
       } 
       else if (stat[i] != undefined && stat[i].innerHTML == typingText) {
       } 
+      else if(reconnectAfter && stat[i] != undefined && stat[i].innerHTML == 'Stranger has disconnected.'){
+        var strangerMsgNum = document.getElementsByClassName('strangermsg').length;
+        if(strangerMsgNum<=messagesChecked){
+          myDisconnect();
+        }
+      }
       else {
         stat[i].innerHTML = getTimeStamp() + ' ' + stat[i].innerHTML;
       }
@@ -148,10 +156,13 @@ function checkMsg() {
           if(disconnectOnNoCaps){
             if(!(amsg[0]>='A' && amsg[0]<='Z')){
               myDisconnect();
+              console.log("lower case!");
               return;
             }
-            if (!['.', '!', '?',','].includes(amsg[amsg.length - 1])) {
+            console.log(amsg[amsg.length - 1]);
+            if (!['.', '!', '?',',','\'','"',';',':'].includes(amsg[amsg.length - 1])) {
               myDisconnect();
+              console.log("punctuation!");
               return;
             }
           }
@@ -206,6 +217,14 @@ function keyDownTextField(e) {
   }
 }
 function resetWait() {
+  waiting = true;
+}
+
+function disconnect(){
+  var disconnectButton = document.getElementsByClassName('disconnectbtn') [0];
+  disconnectButton.click();
+  disconnectButton.click();
+  resetThings();
   waiting = true;
 }
 
