@@ -18,7 +18,7 @@ var disconnectOnEmpty = true;
 //henceforth referred as 'x'
 var messagesChecked = 5;
 //set to false if you don't want to auto disconnect on lack of capitalisation and punctuation(within first x messages)
-var disconnectOnNoCaps = false;
+var disconnectOnNoCaps = true;
 //set to false if you don't want to disconnect on certain phrases(within first x messages)
 var disconnectOnMessage = true;
 //set to true if you want to search for a new conversation after a stranger disconnects within the first x lines
@@ -46,6 +46,41 @@ var shit = 'Omegle couldn\'t find anyone who shares interests with you, so this 
 var typingText = 'Stranger is typing...';
 var waiting = true;
 //or do touch them but it might break everything ¯\_(ツ)_/¯
+
+function setControl(num){
+  switch(num){
+    case 0:
+      disconnectOnEmpty = !disconnectOnEmpty;
+      break;
+    case 1:
+      disconnectOnNoCaps = !disconnectOnNoCaps;
+      break;
+    case 2:
+      disconnectOnMessage= !disconnectOnMessage;
+      break;
+    case 3:
+      reconnectAfter =!reconnectAfter;
+      break;
+    default:
+      break;
+  }
+}
+
+var controls = ['donnointerests','donbadtyping','donmessage','ronleave'];
+function insertControls(){
+  var header = document.getElementById("header");
+  var someHTML = '<div style="color:white;float:left;">';
+  someHTML+= '<input type="checkbox" id="'+controls[0]+'"'+(disconnectOnEmpty?" checked":"")+'>DOnNoInterests';
+  someHTML+= '<input type="checkbox" id="'+controls[1]+'"'+(disconnectOnNoCaps?" checked":"")+'>DOnBadTyping';
+  someHTML+= '<input type="checkbox" id="'+controls[2]+'"'+(disconnectOnMessage?" checked":"")+'>DOnMessage';
+  someHTML+= '<input type="checkbox" id="'+controls[3]+'"'+(reconnectAfter?" checked":"")+'>ROnLeave';
+  someHTML+= '</div>';
+  header.innerHTML += someHTML; 
+  document.getElementById(controls[0]).addEventListener("click", function(){ setControl(0)});
+  document.getElementById(controls[1]).addEventListener("click", function(){ setControl(1)});
+  document.getElementById(controls[2]).addEventListener("click", function(){ setControl(2)});
+  document.getElementById(controls[3]).addEventListener("click", function(){ setControl(3)});
+}
 
 function getTimeStamp() {
   var d = new Date();
@@ -80,6 +115,7 @@ function colourMeBlack() {
   document.getElementById('tagline').removeChild(headimg);
   head = document.getElementsByTagName('body') [0];
   head.style.backgroundColor = backColor;
+  insertControls();
   periodicCheck();
 }
 
@@ -156,13 +192,11 @@ function checkMsg() {
           if(disconnectOnNoCaps){
             if(!(amsg[0]>='A' && amsg[0]<='Z')){
               myDisconnect();
-              console.log("lower case!");
               return;
             }
             console.log(amsg[amsg.length - 1]);
             if (!['.', '!', '?',',','\'','"',';',':'].includes(amsg[amsg.length - 1])) {
               myDisconnect();
-              console.log("punctuation!");
               return;
             }
           }
