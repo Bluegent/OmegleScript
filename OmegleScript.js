@@ -45,6 +45,8 @@ var phrasesThatTriggerForth = [
 ];
 //amount in ms between two checks, set to lower if you dislike timestamp popping, too low values will affect performance
 var periodicTime = 300;
+//amount in ms between a confirmation and the disconnect
+var timedDisconnectDelay=3000;
 //colour for background
 var backColor = '#111111';
 //colour for all text
@@ -99,7 +101,7 @@ function timedDisconnect() {
     timed = false;
     time = window.setTimeout(function(){
       myDisconnect();
-    }, 3000);
+    }, timedDisconnectDelay);
   }
 }
 function setControl(num) {
