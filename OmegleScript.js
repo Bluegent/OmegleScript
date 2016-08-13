@@ -45,8 +45,6 @@ var phrasesThatTriggerForth = [
 ];
 //amount in ms between two checks, set to lower if you dislike timestamp popping, too low values will affect performance
 var periodicTime = 300;
-//amount in ms between a confirmation and the disconnect
-var timedDisconnectDelay=3000;
 //colour for background
 var backColor = '#111111';
 //colour for all text
@@ -101,7 +99,7 @@ function timedDisconnect() {
     timed = false;
     time = window.setTimeout(function(){
       myDisconnect();
-    }, timedDisconnectDelay);
+    }, 3000);
   }
 }
 function setControl(num) {
@@ -183,6 +181,14 @@ function colourMeBlack() {
   document.getElementById('tagline').removeChild(headimg);
   head = document.getElementsByTagName('body') [0];
   head.style.backgroundColor = backColor;
+  var css = 'a:link{color:#DDDDDD} a:visited{color:#777777}';
+  style = document.createElement('style');
+  if (style.styleSheet) {
+      style.styleSheet.cssText = css;
+  } else {
+      style.appendChild(document.createTextNode(css));
+  }
+  document.getElementsByTagName('head')[0].appendChild(style);
   insertControls();
   periodicCheck();
 }
@@ -231,8 +237,12 @@ function checkStatusMsg() {
 }//"msgsource"
 //"strangermsg"
 //"youmsg
+function appendPrefix(str){
+  return (str.startsWith('http://')|str.startsWith('https://')?str:'http://'+str);
+  //return str;
+}
 function urlizeUrls(str){
-  var urlPatt = /([A-Za-z]+:\/\/|www.|)[a-z0-9-_]+\.[a-z0-9-_:%&;\?#/.=]+/ig;
+  var urlPatt = /([A-Za-z]+:\/\/|www\.|)[a-z0-9-_]+\.[a-z0-9-_:%&;\?#/.=]+/ig;
   if(!urlPatt.test(str))
     return str;
   urlPatt.lastIndex=0;
@@ -243,7 +253,7 @@ function urlizeUrls(str){
   console.log(str);
   while((match = urlPatt.exec(str))!=null){
     console.log(match[0]+" at "+match.index);
-    res+= str.substring(lastPos,match.index)+urlS+match[0]+'">'+match[0]+'</a>';
+    res+= str.substring(lastPos,match.index)+urlS+appendPrefix(match[0])+'">'+match[0]+'</a>';
     lastPos=match.index+match[0].length;
   }
   res+=str.substring(lastPos);
