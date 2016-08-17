@@ -65,7 +65,37 @@ var waiting = true;
 var timed = true;
 var time;
 //or do touch them but it might break everything ¯\_(ツ)_/¯
+/*
+var properGPats = [/[\*\-].*[\*\-]/,/[A-Z].*[~.;,!?]/g];
+var filterPats = [/([^"'a-z]|^)asl([^"'a-z]|$)/i];
+function filter(str){
+	for(var i=0;i<filterPats.length;++i){
+		if(filterPats[i].test(str))
+			return false;
+	}
+	return true;
+}
+function validateGrammar(str){
+	for(var i=0;i<properGPats.length;++i){
+		if(properGPats[i].test(str))
+			return true;
+	}
+	return false;
+}
 
+function test(){
+	var pars = document.getElementsByClassName("properG");
+	console.log(pars.length);
+	for(var i=0;i<pars.length;++i){
+		console.log(pars[i].innerHTML+" "+(validateGrammar(pars[i].innerHTML)?"stay":"disconnect"));
+	}
+	var filt = document.getElementsByClassName("filter");
+	console.log(filt.length);
+	for(var i=0;i<filt.length;++i){
+		console.log(filt[i].innerHTML+" "+(filter(filt[i].innerHTML)?"stay":"disconnect"));
+	}
+}
+*/
 function analyseMessage(msg){
     var patt = [
     /^asl.*/i,/.+\sasl.*/i,
