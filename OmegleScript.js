@@ -67,7 +67,7 @@ var time;
 //or do touch them but it might break everything ¯\_(ツ)_/¯
 /*
 var properGPats = [/[\*\-].*[\*\-]/,/[A-Z].*[~.;,!?]/g];
-var filterPats = [/([^"'a-z]|^)asl([^"'a-z]|$)/i];
+var filterPats = [/([^"'a-z]|^)asl([^"'a-z]|$)/i,/[^"']*[0-9]{1,3}[\s\/]?(m|f|male|female)[^"']*/i];
 function filter(str){
 	for(var i=0;i<filterPats.length;++i){
 		if(filterPats[i].test(str))
