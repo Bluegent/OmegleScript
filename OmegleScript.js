@@ -19,6 +19,8 @@ var messagesChecked = 5;
 var disconnectOnNoCaps = true;
 //set to false if you don't want to disconnect on certain phrases(within first x messages)
 var disconnectOnMessage = true;
+//set to false if you don't want to disconnect on regex filters
+var disconnectOnFilter = true;
 //set to true if you want to search for a new conversation after a stranger disconnects within the first x lines
 var reconnectAfter = true;
 //list of phrases to auto disconnect on, feel free to add more
@@ -27,7 +29,6 @@ var phrasesThatTriggerForth = [
   'whats your name',
   'm r f?',
   'm r f',
-  'asl',
   'm',
   'm or f',
   'what\'s your name?',
@@ -38,13 +39,13 @@ var phrasesThatTriggerForth = [
   'f?',
   'm.',
   'f.',
-  'hi asl',
-  'hi asl?',
   'what\'s your name, stranger?',
   'how large is your penis?'
 ];
 //amount in ms between two checks, set to lower if you dislike timestamp popping, too low values will affect performance
 var periodicTime = 300;
+//amount of delay in ms before a timed disconnect 
+var disconnectDelay = 3000;
 //colour for background
 var backColor = '#111111';
 //colour for all text
@@ -55,65 +56,38 @@ var youColor = '#116633';
 var strangerColor = '#880909';
 //alt + q message
 var greetText = 'Hi, I\'m a jackass and I forgot to configure my script thing.';
+//patterns for filtering, edit them if you know regex or remove an entry if you don't wish to use it
+var filterPats = [
+  /([^a-z]|^)asl([^a-z]|$)/i, //filters away messages containing the phrase 'asl' if it's not surrounded by " or '
+  /([^a-z]|^)[0-9]{1,3}[\s\/]?(m|f|male|female)([^a-z]|$)/i, //filters away messages of the '20 m' / '12 f cali' type
+  /([^a-z]|^)(m|f|male|female)[\s\/]?[0-9]{1,3}([^a-z]|$)/i, // same as above but m 20
+];
 //don't touch
+var inConvo = false;
 var lastcheck = 0;
 var lastStatCheck = 0;
 var logBox;
+var debug = true;
 var shit = 'Omegle couldn\'t find anyone who shares interests with you, so this stranger is completely random. Try adding more interests!';
 var typingText = 'Stranger is typing...';
 var waiting = true;
 var timed = true;
 var time;
+var properGPats = [
+  /[\*\-].*[\*\-]/,
+  /[A-Z].*[~.;,!?:]/g
+];
 //or do touch them but it might break everything ¯\_(ツ)_/¯
-/*
-var properGPats = [/[\*\-].*[\*\-]/,/[A-Z].*[~.;,!?]/g];
-var filterPats = [/([^"'a-z]|^)asl([^"'a-z]|$)/i,/[^"']*[0-9]{1,3}[\s\/]?(m|f|male|female)[^"']*/i];
-function filter(str){
-	for(var i=0;i<filterPats.length;++i){
-		if(filterPats[i].test(str))
-			return false;
-	}
-	return true;
-}
-function validateGrammar(str){
-	for(var i=0;i<properGPats.length;++i){
-		if(properGPats[i].test(str))
-			return true;
-	}
-	return false;
-}
-
-function test(){
-	var pars = document.getElementsByClassName("properG");
-	console.log(pars.length);
-	for(var i=0;i<pars.length;++i){
-		console.log(pars[i].innerHTML+" "+(validateGrammar(pars[i].innerHTML)?"stay":"disconnect"));
-	}
-	var filt = document.getElementsByClassName("filter");
-	console.log(filt.length);
-	for(var i=0;i<filt.length;++i){
-		console.log(filt[i].innerHTML+" "+(filter(filt[i].innerHTML)?"stay":"disconnect"));
-	}
-}
-*/
-function analyseMessage(msg){
-    var patt = [
-    /^asl.*/i,/.+\sasl.*/i,
-    /[0-9]{1,2}\/?[mf]\/?[a-z]*/i
-    ];
-    for(var i=0;i<patt.length;++i){
-    	//log("testing pattern "+patt[i].toString()+" to text \""+msg+"\" result = "+patt[i].test(msg));
-    	if(patt[i].test(msg))
-      	return false;
-    }
-    return true;
-}
-
+//here be functions, ye of little programming knowledge steer away
 function resetThings() {
   lastcheck = 0;
   lastStatCheck = 0;
   timed = true;
   waiting = true;
+}
+function log(str) {
+  if (debug)
+  console.log(str);
 }
 function myDisconnect() {
   window.clearTimeout(time);
@@ -125,11 +99,13 @@ function myDisconnect() {
   waiting = true;
 }
 function timedDisconnect() {
+  log('timed disconnect');
+  inConvo=false;
   if (timed) {
     timed = false;
-    time = window.setTimeout(function(){
+    time = window.setTimeout(function () {
       myDisconnect();
-    }, 3000);
+    }, disconnectDelay);
   }
 }
 function setControl(num) {
@@ -144,6 +120,8 @@ function setControl(num) {
       disconnectOnMessage = !disconnectOnMessage;
       break;
     case 3:
+      disconnectOnFilter = !disconnectOnFilter;
+    case 4:
       reconnectAfter = !reconnectAfter;
       break;
     default:
@@ -154,6 +132,7 @@ var controls = [
   'donnointerests',
   'donbadtyping',
   'donmessage',
+  'donfilter',
   'ronleave'
 ];
 function insertControls() {
@@ -162,7 +141,8 @@ function insertControls() {
   someHTML += '<input type="checkbox" id="' + controls[0] + '"' + (disconnectOnEmpty ? ' checked' : '') + '>DOnNoInterests';
   someHTML += '<input type="checkbox" id="' + controls[1] + '"' + (disconnectOnNoCaps ? ' checked' : '') + '>DOnBadTyping';
   someHTML += '<input type="checkbox" id="' + controls[2] + '"' + (disconnectOnMessage ? ' checked' : '') + '>DOnMessage';
-  someHTML += '<input type="checkbox" id="' + controls[3] + '"' + (reconnectAfter ? ' checked' : '') + '>ROnLeave';
+  someHTML += '<input type="checkbox" id="' + controls[3] + '"' + (disconnectOnFilter ? ' checked' : '') + '>DOnFilter';
+  someHTML += '<input type="checkbox" id="' + controls[4] + '"' + (reconnectAfter ? ' checked' : '') + '>ROnLeave';
   someHTML += '</div>';
   header.innerHTML += someHTML;
   document.getElementById(controls[0]).addEventListener('click', function () {
@@ -177,8 +157,11 @@ function insertControls() {
   document.getElementById(controls[3]).addEventListener('click', function () {
     setControl(3)
   });
-  var logo = document.getElementById("logo");
-  logo.style="z-index:-1;position:relative;";
+  document.getElementById(controls[4]).addEventListener('click', function () {
+    setControl(4)
+  });
+  var logo = document.getElementById('logo');
+  logo.style = 'z-index:-1;position:relative;';
 }
 function getTimeStamp() {
   var d = new Date();
@@ -193,7 +176,7 @@ function getTimeStamp() {
   str += '0';
   str += d.getSeconds();
   return '[' + str + ']';
-}//used to find HTML element where the chat log is held
+} //used to find HTML element where the chat log is held
 
 function searchBox() {
   logBox = document.getElementsByClassName('logbox') [0];
@@ -214,11 +197,11 @@ function colourMeBlack() {
   var css = 'a:link{color:#DDDDDD} a:visited{color:#777777}';
   style = document.createElement('style');
   if (style.styleSheet) {
-      style.styleSheet.cssText = css;
+    style.styleSheet.cssText = css;
   } else {
-      style.appendChild(document.createTextNode(css));
+    style.appendChild(document.createTextNode(css));
   }
-  document.getElementsByTagName('head')[0].appendChild(style);
+  document.getElementsByTagName('head') [0].appendChild(style);
   insertControls();
   periodicCheck();
 }
@@ -244,53 +227,72 @@ function checkStatusMsg() {
   var stat = document.getElementsByClassName('statuslog');
   if (lastStatCheck != stat.length) {
     for (var i = lastStatCheck; i < stat.length; ++i) {
-      if (stat[i] != undefined && stat[i].innerHTML == shit && disconnectOnEmpty) {
-        myDisconnect();
-        break;
-      } 
-      else if (stat[i] != undefined && stat[i].innerHTML.startsWith('<div class="newchatbtnwrapper">')) {
-      } 
-      else if (stat[i] != undefined && stat[i].innerHTML == typingText) {
-      } 
-      else if (reconnectAfter && stat[i] != undefined && stat[i].innerHTML == 'Stranger has disconnected.') {
-        var strangerMsgNum = document.getElementsByClassName('strangermsg').length;
-        if (strangerMsgNum <= messagesChecked) {
-          timedDisconnect();
+      if (stat[i] != undefined) {
+        if(stat[i].innerHTML.startsWith("You both like") || stat[i].innerHTML.startsWith("Omegle couldn't find anyone")){
+          inConvo = true;
         }
-      } 
-      else {
-        stat[i].innerHTML = getTimeStamp() + ' ' + stat[i].innerHTML;
+        if(stat[i].innerHTML.endsWith("disconnected.")){
+          inConvo=false;
+        }
+        if (stat[i] != undefined && stat[i].innerHTML == shit && disconnectOnEmpty) {
+          log('Disconnected due to no matching interests.');
+          myDisconnect();
+          break;
+        } else if (stat[i].innerHTML.startsWith('<div class="newchatbtnwrapper">')) {
+        } else if (stat[i].innerHTML == typingText) {
+        } else if (reconnectAfter && stat[i].innerHTML == 'Stranger has disconnected.') {
+          var strangerMsgNum = document.getElementsByClassName('strangermsg').length;
+          if (strangerMsgNum <= messagesChecked) {
+            log('Reconnecting due to leave.');
+            timedDisconnect();
+          }
+        } else {
+          stat[i].innerHTML = getTimeStamp() + ' ' + stat[i].innerHTML;
+        }
       }
     }
   }
   lastStatCheck = stat.length;
-}//"msgsource"
+} //"msgsource"
 //"strangermsg"
 //"youmsg
-function appendPrefix(str){
-  return (str.startsWith('http://')|str.startsWith('https://')?str:'http://'+str);
-  //return str;
+
+function appendPrefix(str) {
+  return (str.startsWith('http://') | str.startsWith('https://') ? str : 'http://' + str);
 }
-function urlizeUrls(str){
-  var urlPatt = /([A-Za-z]+:\/\/|www\.|)[a-z0-9-_]+\.[a-z0-9-_:%&;\?#/.=]+/ig;
-  if(!urlPatt.test(str))
+function urlizeUrls(str) {
+  var urlPatt = /([A-Za-z]+:\/\/|www\.)[a-z0-9-_]+\.[a-z0-9-_:%&;\?#/.=]+/gi;
+  if (!urlPatt.test(str))
     return str;
-  urlPatt.lastIndex=0;
- 	var urlS = '<a href="';  
+  urlPatt.lastIndex = 0;
+  var urlS = '<a href="';
   var match;
-  var res="";
-  var lastPos=0;
-  console.log(str);
-  while((match = urlPatt.exec(str))!=null){
-    console.log(match[0]+" at "+match.index);
-    res+= str.substring(lastPos,match.index)+urlS+appendPrefix(match[0])+'">'+match[0]+'</a>';
-    lastPos=match.index+match[0].length;
+  var res = '';
+  var lastPos = 0;
+  while ((match = urlPatt.exec(str)) != null) {
+    res += str.substring(lastPos, match.index) + urlS + appendPrefix(match[0]) + '">' + match[0] + '</a>';
+    lastPos = match.index + match[0].length;
   }
-  res+=str.substring(lastPos);
+  res += str.substring(lastPos);
   return res;
 }
-
-
+function matchedFilter(str) {
+  for (var i = 0; i < filterPats.length; ++i) {
+    filterPats[i].lastIndex = 0;
+    if (filterPats[i].test(str))
+    return true;
+  }
+  return false;
+}
+function grammarIsValid(str) {
+  for (var i = 0; i < properGPats.length; ++i) {
+    properGPats[i].lastIndex=0;
+    if (properGPats[i].test(str)) {
+      return true;
+    }
+  }
+  return false;
+}
 function checkMsg() {
   var current = document.getElementsByClassName('msgsource');
   if (lastcheck != current.length) {
@@ -303,27 +305,28 @@ function checkMsg() {
       if (bold != undefined) {
         bold.getElementsByClassName('msgsource') [0].style.color = strangerColor;
         var strangerMsgNum = document.getElementsByClassName('strangermsg').length;
-        if (strangerMsgNum <= messagesChecked && disconnectOnMessage) {
+        if (strangerMsgNum <= messagesChecked) {
           var msg = bold.getElementsByTagName('span');
           var amsg = msg[msg.length - 1].innerHTML.trim();
-          //console.log(amsg);
           if (disconnectOnNoCaps) {
-            if (!(amsg[0] >= 'A' && amsg[0] <= 'Z')) {
+            if (!grammarIsValid(amsg)) {
+              log('Disconnected on message "' + amsg + '" due to bad grammar.');
               timedDisconnect();
-              return;
-            }
-            console.log(amsg[amsg.length - 1]);
-            if (!['.','!', '?',',','\'','"',';',':'].includes(amsg[amsg.length - 1])) {
-              timedDisconnect();
-              return;
             }
           }
-          amsg = amsg.toLowerCase();
-          //console.log("["+amsg+"]");
-          for (var j = 0; j < phrasesThatTriggerForth.length; ++j) {
-            if (amsg == phrasesThatTriggerForth[j]) {
+          if (disconnectOnFilter) {
+            if (matchedFilter(amsg)) {
+              log('Disconnected on message "' + amsg + ' "due to matching a filtered pattern.');
               timedDisconnect();
-              return;
+            }
+          }
+          if (disconnectOnMessage) {
+            amsg = amsg.toLowerCase();
+            for (var j = 0; j < phrasesThatTriggerForth.length; ++j) {
+              if (amsg == phrasesThatTriggerForth[j]) {
+                log('Disconnected on message "' + amsg + ' "due to matching a phrase.');
+                timedDisconnect();
+              }
             }
           }
         }
@@ -339,20 +342,20 @@ function checkMsg() {
   }
 }
 function periodicCheck() {
-  colorChat();
+  colorChat(); 
   checkStatusMsg();
   checkMsg();
   window.setTimeout(function () {
     periodicCheck()
   }, periodicTime);
-}//triggers when a key is pressed anywhere in the window
+} //triggers when a key is pressed anywhere in the window
 
 function keyDownTextField(e) {
   var keyCode = e.keyCode;
   var evtobj = window.event ? event : e;
   //currently ctrl+q disconnects and finds new chat after leaving a message.
-  if (evtobj.keyCode == 81 && evtobj.ctrlKey && waiting){
-    window.setTimeout(function(){
+  if (evtobj.keyCode == 81 && evtobj.ctrlKey && waiting) {
+    window.setTimeout(function () {
       myDisconnect();
     }, 500);
     waiting = false;
@@ -360,7 +363,7 @@ function keyDownTextField(e) {
   }
   if (evtobj.keyCode == 81 && evtobj.altKey && waiting) {
     setMessage(greetText);
-    window.setTimeout(function(){
+    window.setTimeout(function () {
       resetWait();
     }, 500);
     waiting = false;
@@ -379,14 +382,14 @@ function disconnect() {
 }
 document.addEventListener('keydown', keyDownTextField, false);
 document.addEventListener('click', searchBox, false);
-function setMessage(message){
+function setMessage(message) {
   var t = document.getElementsByClassName('chatmsg') [0].value = message;
 }
-function sendMessage(message){
+function sendMessage(message) {
   setMessage(message);
   var z = document.getElementsByClassName('sendbtn') [0];
   z.click();
-}//useful stuff
+} //useful stuff
 //disconnectbtn 
 //logbox
 //chatmsg
