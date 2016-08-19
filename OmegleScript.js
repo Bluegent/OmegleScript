@@ -7,6 +7,10 @@
 // @match        http://www.omegle.com/
 // @grant        none
 // ==/UserScript==
+
+// Features: white text on black background theme for late night use, one button disconnect(ctrl+Q), clickable links, possibility to disconnect automatically on: completetly random strangers(no interests), bad typing (no capitals and punctuation), filter matches( currently messages that contain 'asl' and text similar to '16 f cali' are filtered) and exact matches of a phrase(like those people that always start with 'm' or bots with a specific start phrase), all within a configurable number of lines.
+// The auto disconnects have small checkboxes on the main site(no persistence) but should be configured by setting the attributes below to true/false.
+// Other variables can also be configured like the first x messages to be checked for disconnection etc.
 //Instructions:
 // ctrl + q - auto disconnect and find new chat
 // alt + q - paste specific text in box 
