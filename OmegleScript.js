@@ -270,7 +270,7 @@ function urlizeUrls(str) {
   var res = '';
   var lastPos = 0;
   while ((match = urlPatt.exec(str)) != null) {
-    res += str.substring(lastPos, match.index) + urlS + appendPrefix(match[0]) + '">' + match[0] + '</a>';
+    res += str.substring(lastPos, match.index) + urlS + appendPrefix(match[0]) + '" target="_blank">' + match[0] + '</a>';
     lastPos = match.index + match[0].length;
   }
   res += str.substring(lastPos);
