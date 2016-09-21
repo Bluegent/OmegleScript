@@ -14,7 +14,7 @@
 //Instructions:
 // script automatically disconnects on no interests and a list of phrases by default, can be set below
 // ctrl + q - auto disconnect and find new chat
-// alt + q - paste specific text in box 
+// alt + q - paste specific text in box
 // script automatically disconnects on no interests and a list of phrases by default, can be set below
 //set to false if you don't want to auto disconnect on no interest matches
 var disconnectOnEmpty = true;
@@ -51,13 +51,13 @@ var phrasesThatTriggerForth = [
 ];
 //amount in ms between two checks, set to lower if you dislike timestamp popping, too low values will affect performance
 var periodicTime = 300;
-//amount of delay in ms before a timed disconnect 
+//amount of delay in ms before a timed disconnect
 var disconnectDelay = 3000;
 //colour for background
 var backColor = '#111111';
 //colour for all text
 var frontColor = '#AAAAAA';
-//colour for 'You:' 
+//colour for 'You:'
 var youColor = '#116633';
 //colour for 'Stranger:'
 var strangerColor = '#880909';
@@ -127,6 +127,7 @@ function setControl(num) {
       break;
     case 3:
       disconnectOnFilter = !disconnectOnFilter;
+          break;
     case 4:
       reconnectAfter = !reconnectAfter;
       break;
@@ -152,19 +153,19 @@ function insertControls() {
   someHTML += '</div>';
   header.innerHTML += someHTML;
   document.getElementById(controls[0]).addEventListener('click', function () {
-    setControl(0)
+    setControl(0);
   });
   document.getElementById(controls[1]).addEventListener('click', function () {
-    setControl(1)
+    setControl(1);
   });
   document.getElementById(controls[2]).addEventListener('click', function () {
-    setControl(2)
+    setControl(2);
   });
   document.getElementById(controls[3]).addEventListener('click', function () {
-    setControl(3)
+    setControl(3);
   });
   document.getElementById(controls[4]).addEventListener('click', function () {
-    setControl(4)
+    setControl(4);
   });
   var logo = document.getElementById('logo');
   logo.style = 'z-index:-1;position:relative;';
@@ -215,7 +216,7 @@ function colorChat() {
   var element = document.getElementsByClassName('logwrapper') [0];
   if (element.style.backgroundColor != backColor) {
     colorElement(element, frontColor, backColor);
-    element = document.getElementsByClassName('sendbtn') [0]
+    element = document.getElementsByClassName('sendbtn') [0];
     colorElement(element, frontColor, backColor);
     element = document.getElementsByClassName('disconnectbtn') [0];
     colorElement(element, frontColor, backColor);
@@ -238,7 +239,7 @@ function checkStatusMsg() {
   var stat = document.getElementsByClassName('statuslog');
   if (lastStatCheck != stat.length) {
     for (var i = lastStatCheck; i < stat.length; ++i) {
-      if (stat[i] != undefined) {
+      if (stat[i] !== undefined) {
         if(stat[i].innerHTML.startsWith("You both like") || stat[i].innerHTML.startsWith("Omegle couldn't find anyone")){
           inConvo = true;
           if(autoGreet)
@@ -247,7 +248,7 @@ function checkStatusMsg() {
         if(stat[i].innerHTML.endsWith("disconnected.")){
           inConvo=false;
         }
-        if (stat[i] != undefined && stat[i].innerHTML == shit && disconnectOnEmpty) {
+        if (stat[i] !== undefined && stat[i].innerHTML == shit && disconnectOnEmpty) {
           log('Disconnected due to no matching interests.');
           myDisconnect();
           break;
@@ -270,7 +271,7 @@ function checkStatusMsg() {
 //"strangermsg"
 //"youmsg
 function dye(str,clr,reason){
-  return '<span style ="color:'+clr+'">'+str+(reason==undefined?'':' ('+reason+')')+'</span>';  
+  return '<span style ="color:'+clr+'">'+str+(reason===undefined?'':' ('+reason+')')+'</span>';
 }
 function appendPrefix(str) {
   return (str.startsWith('http://') | str.startsWith('https://') ? str : 'http://' + str);
@@ -284,7 +285,7 @@ function urlizeUrls(str) {
   var match;
   var res = '';
   var lastPos = 0;
-  while ((match = urlPatt.exec(str)) != null) {
+  while ((match = urlPatt.exec(str)) !== null) {
     res += str.substring(lastPos, match.index) + urlS + appendPrefix(match[0]) + '">' + match[0] + '</a>';
     lastPos = match.index + match[0].length;
   }
@@ -317,7 +318,7 @@ function checkMsg() {
       var curr = current[i].parentNode.parentNode;
       curr.style.color = frontColor;
       var bold = curr.getElementsByClassName('strangermsg') [0];
-      if (bold != undefined) {
+      if (bold !== undefined) {
         bold.getElementsByClassName('msgsource') [0].style.color = strangerColor;
         var strangerMsgNum = document.getElementsByClassName('strangermsg').length;
         if (strangerMsgNum <= messagesChecked) {
@@ -350,21 +351,21 @@ function checkMsg() {
         }
       }
       bold = curr.getElementsByClassName('youmsg') [0];
-      if (bold != undefined) {
+      if (bold !== undefined) {
         bold.getElementsByClassName('msgsource') [0].style.color = youColor;
       }
-      var msg = current[i].parentElement;
-      msg.innerHTML = '<span>' + getTimeStamp() + ' </span>' + urlizeUrls(msg.innerHTML);
+      var msg2= current[i].parentElement;
+      msg2.innerHTML = '<span>' + getTimeStamp() + ' </span>' + urlizeUrls(msg2.innerHTML);
     }
     lastcheck = current.length;
   }
 }
 function periodicCheck() {
-  colorChat(); 
+  colorChat();
   checkStatusMsg();
   checkMsg();
   window.setTimeout(function () {
-    periodicCheck()
+    periodicCheck();
   }, periodicTime);
 } //triggers when a key is pressed anywhere in the window
 
@@ -408,7 +409,7 @@ function sendMessage(message) {
   var z = document.getElementsByClassName('sendbtn') [0];
   z.click();
 } //useful stuff
-//disconnectbtn 
+//disconnectbtn
 //logbox
 //chatmsg
 //sendbtn
